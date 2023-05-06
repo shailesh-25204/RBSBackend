@@ -1,7 +1,6 @@
 require('dotenv').config()
 const express = require("express")
 const app = express()
-const jwt = require("jsonwebtoken")
 const bcrypt = require('bcrypt')
 const {users} = require('./server.js')
 
@@ -12,7 +11,7 @@ let refreshTokens  = []
 app.post('/users/token', (req,res) => {
     const refreshToken = req.body.token
     if(refreshToken == null) return res.sendStatus(403)
-    jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err,user) => {
+    jwt.verify(refreshToken, process.env.JWT_TOKEN_SECRET, (err,user) => {
         if(err) return res.sendStatus(403)
         const accessToken = generateAccessToken({name: user.name})
         res.json({accessToken: accessToken})
@@ -35,7 +34,7 @@ app.post('/users/login', async (req,res) => {
             const username = req.body.username
             const client = {name: username}
             const accessToken = generateAccessToken(client)
-            const refreshToken = jwt.sign(client,process.env.REFRESH_TOKEN_SECRET)
+            const refreshToken = jwt.sign(client,process.env.JWT_TOKEN_SECRET,{expiresIn: '6h'})
             refreshTokens.push(refreshToken)
             res.json({accessToken: accessToken, refreshToken: refreshToken})
 
@@ -49,7 +48,7 @@ app.post('/users/login', async (req,res) => {
 })
 
 function generateAccessToken(user){
-    return jwt.sign(user,process.env.ACCESS_TOKEN_SECRET, {expiresIn: '15s'})
+    return jwt.sign(user,process.env.JWT_TOKEN_SECRET, {expiresIn: '15s'})
 
 }
 
